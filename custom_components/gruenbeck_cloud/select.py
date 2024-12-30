@@ -52,20 +52,20 @@ SELECTS: tuple[GruenbeckCloudEntityDescription, ...] = (
             ]
         },
     ),
-    GruenbeckCloudEntityDescription(
-        key="water_hardness_unit",
-        translation_key="water_hardness_unit",
-        options=list(PARAMETER_WATER_UNITS.values()),
-        entity_category=EntityCategory.CONFIG,
-        value_fn=lambda device: PARAMETER_WATER_UNITS[
-            device.parameters.water_hardness_unit  # type: ignore[index]
-        ],
-        update_fn=lambda device, option: {
-            "water_hardness_unit": list(PARAMETER_WATER_UNITS.keys())[
-                list(PARAMETER_WATER_UNITS.values()).index(option)
-            ]
-        },
-    ),
+    # GruenbeckCloudEntityDescription(
+    #     key="water_hardness_unit",
+    #     translation_key="water_hardness_unit",
+    #     options=list(PARAMETER_WATER_UNITS.values()),
+    #     entity_category=EntityCategory.CONFIG,
+    #     value_fn=lambda device: PARAMETER_WATER_UNITS[
+    #         device.parameters.water_hardness_unit  # type: ignore[index]
+    #     ],
+    #     update_fn=lambda device, option: {
+    #         "water_hardness_unit": list(PARAMETER_WATER_UNITS.keys())[
+    #             list(PARAMETER_WATER_UNITS.values()).index(option)
+    #         ]
+    #     },
+    # ),
     GruenbeckCloudEntityDescription(
         key="mode",
         translation_key="mode",
