@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from httpcore import URL
+from yarl import URL
 from pygruenbeck_cloud import PyGruenbeckCloud
 from pygruenbeck_cloud.exceptions import (
     PyGruenbeckCloudConnectionClosedError,
