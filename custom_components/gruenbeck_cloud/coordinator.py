@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
+from httpcore import URL
 from pygruenbeck_cloud import PyGruenbeckCloud
 from pygruenbeck_cloud.exceptions import (
     PyGruenbeckCloudConnectionClosedError,
@@ -11,7 +13,8 @@ from pygruenbeck_cloud.exceptions import (
     PyGruenbeckCloudResponseStatusError,
     PyGruenbeckCloudUpdateParameterError,
 )
-from pygruenbeck_cloud.models import Device
+from pygruenbeck_cloud.models import Device, DeviceRealtimeInfo
+from pygruenbeck_cloud.const import (WEB_REQUESTS, PARAM_NAME_DEVICE_ID, PARAM_NAME_ACCESS_TOKEN)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
@@ -198,7 +201,8 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
                 self._listen_websocket()
             else:
                 await self.api.enter_sd()
-                await self.api.refresh_sd()
+                #await self.api.refresh_sd()
+                device.realtime = self.refresh_sd()
 
             self.logger.debug("=== real time data ===")
             self.logger.debug(self.api.device)
@@ -210,3 +214,39 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
             PyGruenbeckCloudResponseStatusError,
         ) as err:
             raise UpdateFailed(f"Unable to get data from API: {err}") from err
+
+    async def refresh_sd(self) -> DeviceRealtimeInfo:
+
+        token = await self.api._get_web_access_token()
+
+        scheme = WEB_REQUESTS["refresh_sd"]["scheme"]
+        host = WEB_REQUESTS["refresh_sd"]["host"]
+        port = WEB_REQUESTS["refresh_sd"]["port"]
+        use_cookies = WEB_REQUESTS["refresh_sd"]["use_cookies"]
+
+        headers = self.api._placeholder_to_values_dict(
+            WEB_REQUESTS["refresh_sd"]["headers"],
+            {
+                PARAM_NAME_ACCESS_TOKEN: token,
+            },
+        )
+        path = self.api._placeholder_to_values_str(
+            WEB_REQUESTS["refresh_sd"]["path"],
+            {PARAM_NAME_DEVICE_ID: self._device_id},
+        )
+        method = WEB_REQUESTS["refresh_sd"]["method"]
+        data = WEB_REQUESTS["refresh_sd"]["data"]
+        query = WEB_REQUESTS["refresh_sd"]["query_params"]
+
+        url = URL.build(scheme=scheme, host=host, port=port, path=path, query=query)
+        # @TODO - expected_status_codes and allow_redirects can also come from CONST!
+        response = await self.api._http_request(
+            url=url,
+            headers=headers,
+            method=method,
+            data=data,
+            expected_status_codes=[aiohttp.http.HTTPStatus.ACCEPTED, aiohttp.http.HTTPStatus.OK],
+            use_cookies=use_cookies,
+        )
+
+        return DeviceRealtimeInfo.from_dict(response)
