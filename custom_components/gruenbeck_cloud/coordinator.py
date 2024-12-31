@@ -201,7 +201,7 @@ class GruenbeckCloudCoordinator(DataUpdateCoordinator[Device]):
                 await self.api.refresh_sd()
 
             self.logger.debug("=== real time data ===")
-            self.logger.debug(device)
+            self.logger.debug(self.api.device)
             return device
         except (
             Exception,
